@@ -1,0 +1,12 @@
+[project]
+name = "engraving"
+version = "0.1.0"
+description = "AI-assisted logo-to-engrave-mask pipeline demo"
+requires-python = ">=3.12"
+dependencies = [
+    "fal-client",
+    "opencv-python-headless",
+    "pillow",
+    "python-dotenv>=1.2.2",
+    "vtracer",
+]

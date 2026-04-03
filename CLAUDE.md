@@ -8,34 +8,55 @@ See `RESEARCH.md` for the full research context — the laser engraving workflow
 
 ## What This Is
 
-A demo that takes a customer's logo (raster, messy, too many colors) and produces a clean, single-color vector mask suitable for laser engraving. Not a product. Not production code. Just enough to prove the pipeline works.
+A conversational pipeline driven through Claude Code. The operator gives me a logo and I walk them through each stage — removing the background, choosing a threshold, cleaning up contours, vectorizing — presenting options at each decision point and waiting for their call before moving on.
+
+The "UI" is this conversation. The tools are Python scripts I invoke on the operator's behalf. The output is a single-color SVG ready for laser software.
 
 ## The Pipeline
 
-1. **Input** — raster logo (PNG/JPG), any quality
-2. **Background removal** — segment the logo from its background
-3. **Simplification** — collapse to binary (engrave / don't engrave)
-4. **Contour detection** — extract clean edges from the mask
-5. **Vectorization** — convert contours to minimal-node SVG paths
-6. **Output** — single-color SVG ready for laser software (LightBurn, etc.)
+Each step produces intermediate files in `output/{logo_name}/`. At decision points, I generate a contact sheet showing labeled options (A, B, C, etc.), open it for the operator to review, and ask them to pick.
+
+1. **Input** — operator provides a raster logo (PNG/JPG)
+2. **Background removal** — segment the logo from its background. Show result, confirm it's clean.
+3. **Simplification** — generate multiple threshold options (binary masks at different levels). Present contact sheet. Operator picks.
+4. **Contour detection** — extract clean edges from the chosen mask. Show result.
+5. **Vectorization** — convert to SVG with different node density / detail settings. Present contact sheet of options. Operator picks.
+6. **Output** — single-color SVG ready for LightBurn / laser software.
+
+### What "laser-ready" means
+
+- Minimal nodes — excess nodes cause laser stalling and burn marks
+- No double lines — laser hits the same path twice
+- Closed paths — no gaps or incomplete curves
+- Single color, no gradients — flat geometry only
+- Clean enough to import into LightBurn without manual cleanup
 
 ## Stack
 
-Python. Use whatever libraries get the job done fastest:
-- Pillow / OpenCV for image processing
-- rembg or similar for background removal
-- potrace / vtracer or similar for bitmap-to-vector conversion
-- fal.ai SDK if we need AI-powered steps (Image2SVG, Recraft, etc.)
+- **Python** with uv for dependency management
+- **Pillow** — image processing, thresholding, contact sheet generation
+- **OpenCV** — contour detection, morphological cleanup
+- **vtracer** — bitmap-to-vector conversion
+- **fal.ai** — AI-powered steps (background removal, Image2SVG, etc.)
 
-## Test Files
+## Project Structure
 
-`test-logo-starbucks.png` — Starbucks siren logo. Green and white, circular, with fine interior detail (hair, crown, stars). Good test case because it requires collapsing to a single-color mask while preserving delicate line work. Essentially already two-color — thresholding is straightforward.
+```
+lib/              — reusable pipeline utilities
+  contact_sheet.py  — side-by-side image comparison sheets
+output/           — intermediate and final outputs (gitignored)
+  {logo_name}/    — per-logo working directory
+test-logo-*.png   — test input files
+```
 
-`test-logo-firefox.png` — Firefox logo. Gradient-heavy: orange-to-yellow fox wrapping a purple-to-blue globe, pink-to-orange base. No hard edges between regions — all continuous color transitions. The hard test case: the pipeline must decide where boundaries fall when colors blend into each other rather than separate cleanly.
+## Presenting Options to the Operator
+
+When a pipeline step has tunable parameters, generate multiple variants and present them using `lib/contact_sheet.py`. Label each option clearly (e.g., "A — Threshold 100", "B — Threshold 140", "C — Threshold 180"). Open the contact sheet with `open` so it appears in Preview. Ask the operator which option to proceed with.
 
 ## Conventions
 
 - This is a demo. No tests, no CI, no deployment.
-- Scripts over frameworks. CLI scripts that take an input image and produce an output SVG.
 - Keep it simple. One happy path. Handle the common case, not every edge case.
 - Commit working checkpoints so we can roll back if an approach doesn't pan out.
+- Pipeline steps are Python scripts in `lib/` that Claude Code invokes via `uv run`.
+- All intermediate outputs go to `output/` (gitignored).
