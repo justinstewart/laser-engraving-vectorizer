@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "AI-assisted logo-to-engrave-mask pipeline demo"
 requires-python = ">=3.12"
 dependencies = [
+    "cairosvg>=2.9.0",
     "fal-client",
     "opencv-python-headless",
     "pillow",
     "python-dotenv>=1.2.2",
+    "rdp>=0.8",
+    "svgpathtools>=1.7.2",
     "vtracer",
 ]

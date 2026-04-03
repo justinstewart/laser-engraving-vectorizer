@@ -4,7 +4,8 @@ Throwaway project. Proof of concept for an AI-assisted logo-to-engrave-mask pipe
 
 ## Research
 
-See `RESEARCH.md` for the full research context — the laser engraving workflow, AI vector tool landscape, fal.ai offerings, and why a focused masking pipeline is the right approach for this demo.
+- `RESEARCH.md` — the laser engraving workflow, AI vector tool landscape, fal.ai offerings, and why a focused masking pipeline is the right approach for this demo.
+- `LASER-SPECS.md` — concrete SVG quality criteria for laser engraving. Key numbers: < 200 nodes/path target, > 500 nodes/path is a fail, prefer splines over polygons. Based on GRBL controller buffer limits and LightBurn community consensus.
 
 ## What This Is
 
