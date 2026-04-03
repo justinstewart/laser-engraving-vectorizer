@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "cairosvg>=2.9.0",
     "fal-client",
-    "opencv-python-headless",
+    "opencv-contrib-python-headless>=4.13.0.92",
     "pillow",
     "python-dotenv>=1.2.2",
     "rdp>=0.8",

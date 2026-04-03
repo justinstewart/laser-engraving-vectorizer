@@ -41,11 +41,26 @@ We tried two approaches to reduce node counts:
 ### Different logos need different segmentation strategies
 
 - **Starbucks** (two-color, high-saturation green on white) — Saturation thresholding and Luminance both worked. Luminance 140 was selected.
-- **Firefox** (gradient-heavy, all high-saturation colors) — untested. Saturation thresholding likely won't work since all regions are colorful. May need edge detection, AI-assisted segmentation (fal.ai Image2SVG), or a different approach entirely.
+- **Firefox** (gradient-heavy, all high-saturation colors) — standard thresholding failed (saturation sees everything as colorful, luminance can't separate fox from globe). K-means color quantization also struggled. **Winning approach**: fal.ai PIDI edge detection → binary threshold at 120 → vtracer. Produces a line-art engraving that captures the structural shapes.
+
+### Key insight: gradient logos are a different product
+
+Gradient logos can't be meaningfully reduced to a single binary mask. The options are:
+1. **Line art engraving** — edge detection to get outlines, vectorize as filled regions (what we built)
+2. **Multi-layer depth engraving** — segment into regions, assign each to a different engrave power (not yet built — K-means didn't segment well enough, needs better region detection)
+3. **Dithered raster engraving** — grayscale + Jarvis dithering in LightBurn, not a vector workflow at all
 
 ### Starbucks results
 
 Pipeline: BiRefNet background removal → Luminance 140 threshold → vtracer spline mode at 45% scale → 499 nodes on main path. Final SVG: `output/starbucks/04-final.svg`.
+
+### Firefox results (line art)
+
+Pipeline: BiRefNet background removal → fal.ai PIDI edge detection → binary threshold at 120 → vtracer spline mode at 100% scale → 3 paths, max 249 nodes. Final SVG: `output/firefox/03-final-1.0.svg`.
+
+### Edge detection: PIDI > Adaptive > Canny
+
+fal.ai's PIDI preprocessor (`fal-ai/image-preprocessors/pidi`) produces significantly cleaner, more connected edges than local OpenCV adaptive thresholding or Canny. Important: PIDI output is soft/grayscale — must threshold to binary before vectorizing. Threshold level matters: too high (180) loses fine interior lines, 120 preserves them.
 
 ## Stack
 
@@ -67,6 +82,8 @@ lib/
   vectorize.py        — vtracer wrapper with detail presets
   simplify.py         — SVG path simplification (BROKEN — Bezier refit artifacts)
   svg_to_png.py       — render SVGs to PNG for previews (white background)
+  edge_detect.py      — fal.ai edge detection (HED, PIDI, Canny, TEED)
+  segment.py          — K-means color quantization region segmentation (needs work)
 output/               — intermediate and final outputs (gitignored)
   {logo_name}/        — per-logo working directory
 test-logo-*.png       — test input files
