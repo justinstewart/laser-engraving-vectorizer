@@ -86,7 +86,6 @@ lib/
   segment.py          — K-means color quantization region segmentation (needs work)
 output/               — intermediate and final outputs (gitignored)
   {logo_name}/        — per-logo working directory
-test-logo-*.png       — test input files
 LASER-SPECS.md        — SVG quality criteria for laser engraving
 RESEARCH.md           — full research context
 ```
