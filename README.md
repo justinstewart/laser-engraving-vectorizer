@@ -1,6 +1,6 @@
 # Engraving Pipeline
 
-An AI-assisted workflow for converting customer raster logos into laser-ready SVGs. Built as a proof of concept — designed to take the 20-minute "clean up the customer's logo for LightBurn" task down to a 2-minute review.
+An AI-assisted workflow for converting customer raster logos into laser-ready SVGs. This is a proof of concept and is not currently expected to be valuable in a real engraving workflow
 
 ## What This Does
 
