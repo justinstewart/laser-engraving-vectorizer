@@ -67,7 +67,7 @@ The pipeline uses [fal.ai](https://fal.ai) for AI-powered steps (background remo
 ## What's In The Box
 
 ```
-output/
+examples/
   starbucks-final.svg       example output — finished Starbucks engraving
   firefox-final.svg         example output — finished Firefox engraving (line art)
   SUMMARY.md                node counts, file sizes, decisions for the examples
@@ -101,6 +101,23 @@ The 500-node ceiling comes from GRBL controller buffer limits — past that, the
 - **Multi-layer depth engraving** for gradient logos. The pipeline can produce line art, but not regions assigned to different engrave powers. Color-based segmentation didn't separate shapes cleanly enough.
 - **Photo / dithered engraving**. This is a vector pipeline. Photo engravings should go through LightBurn's image mode with Jarvis dithering instead.
 - **Automated quality checks**. Node counts are reported per option, but there's no hard pass/fail gate — the operator decides.
+
+## The Bigger Lesson
+
+The most useful finding from this experiment wasn't about the vector pipeline — it was that **vector probably isn't the right output format at all**. If you can produce a clean binary mask from the input logo (which is what this pipeline does in step 3, before vectorization), you're better off engraving the raster mask directly than vectorizing it.
+
+A clean black-and-white mask sent to LightBurn as a 1-bit raster has none of the problems we spent the rest of the pipeline solving:
+
+- No node-count ceiling, no GRBL buffer stalls — the controller streams scanlines, not path segments.
+- No vectorizer artifacts (overshooting Beziers, jagged polylines, fragmented contours).
+- Pixel-accurate to the mask. What you see is what burns.
+- Fast. No vtracer pass, no scale tuning, no node budgeting.
+
+The vector workflow only earns its keep when you genuinely need vector output (resizable cut paths, scoring lines, layered power assignments). For pure engraving from a clean mask, raster wins.
+
+The corollary: **the high-leverage problem is producing the clean mask, not vectorizing it.** That's where the AI tools (BiRefNet, PIDI edge detection) actually moved the needle. Step 4 of this pipeline is mostly compensating for choosing the wrong output format.
+
+If you're starting a similar project, consider stopping at step 3 and engraving the mask as a raster.
 
 ## How It Was Built
 

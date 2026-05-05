@@ -2,6 +2,12 @@
 
 Approach: sample entire path into a dense polyline, apply Douglas-Peucker
 to reduce points, then refit as a sequence of cubic Beziers.
+
+BROKEN: the least-squares Bezier refit produces control points that overshoot
+the original curve, causing visual artifacts (crossed lines, phantom shapes).
+Kept here as a record of the failed approach. Don't use without fixing the
+refit. The working alternative is input-mask downscaling before vectorization
+(see CLAUDE.md).
 """
 
 import re

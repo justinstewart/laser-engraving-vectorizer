@@ -52,11 +52,19 @@ Gradient logos can't be meaningfully reduced to a single binary mask. The option
 
 ### Starbucks results
 
-Pipeline: BiRefNet background removal → Luminance 140 threshold → vtracer spline mode at 45% scale → 499 nodes on main path. Final SVG: `output/starbucks/04-final.svg`.
+Pipeline: BiRefNet background removal → Luminance 140 threshold → vtracer spline mode at 45% scale → 499 nodes on main path. Final SVG: `examples/starbucks-final.svg`.
 
 ### Firefox results (line art)
 
-Pipeline: BiRefNet background removal → fal.ai PIDI edge detection → binary threshold at 120 → vtracer spline mode at 100% scale → 3 paths, max 249 nodes. Final SVG: `output/firefox/03-final-1.0.svg`.
+Pipeline: BiRefNet background removal → fal.ai PIDI edge detection → binary threshold at 120 → vtracer spline mode at 100% scale → 3 paths, max 249 nodes. Final SVG: `examples/firefox-final.svg`.
+
+### The biggest finding: raster probably beats vector here
+
+The vector pipeline works, but the highest-leverage finding was that **vector is likely the wrong output format for engraving from a clean mask**. Once you have the binary mask from step 3, sending it to LightBurn as a 1-bit raster sidesteps everything steps 4–5 try to solve: no node-count ceiling, no GRBL buffer stalls, no vectorizer overshoot artifacts, no scale tuning. Scanline streaming is exactly what laser controllers want.
+
+The vector path only matters when the output genuinely needs to be vector (resizable cut paths, scoring lines, per-region power layers). For pure engraving, the high-leverage problem is producing a clean mask — which is where the AI tools (BiRefNet, PIDI) actually moved the needle. Steps 4–5 are mostly compensating for the wrong format choice.
+
+If extending this project, the first thing to try is stopping at step 3 and routing the mask straight to a raster engrave.
 
 ### Edge detection: PIDI > Adaptive > Canny
 
